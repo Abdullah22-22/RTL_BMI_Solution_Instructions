@@ -36,19 +36,11 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv("${env.SONARQUBE_SERVER}") {
-                    bat """
-                        sonar-scanner ^
-                        -Dsonar.projectKey=BMI_Cal ^
-                        -Dsonar.sources=src ^
-                        -Dsonar.projectName=BMI_Cal ^
-                        -Dsonar.host.url=http://localhost:9000 ^
-                        -Dsonar.token=${env.SONAR_TOKEN} ^
-                        -Dsonar.java.binaries=target/classes
-                    """
-                }
-            }
+             steps {
+                  withSonarQubeEnv("${env.SONARQUBE_SERVER}") {
+                  bat 'mvn sonar:sonar -Dsonar.projectKey=BMI_Cal -Dsonar.projectName=BMI_Cal'
+                   }
+             }
         }
 
         stage('Build Docker Image') {
