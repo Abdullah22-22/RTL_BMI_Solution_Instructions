@@ -6,22 +6,20 @@ pipeline {
     }
 
     environment {
-        // these are the environment variables (Amir's machine) that will be used in the pipeline
        PATH = "C:\\Program Files\\Docker\\Docker\\resources\\bin;${env.PATH}"
        JAVA_HOME = 'C:\\Program Files\\Java\\jdk-21'  // Adjust to your actual JDK path
 
-
-        SONARQUBE_SERVER = 'XXXXX'
-        SONAR_TOKEN = credentials('XXXXX') //make sure a right token is selected
-        DOCKERHUB_CREDENTIALS_ID = 'XXXX'
-        DOCKERHUB_REPO = 'XXXX/bmi_3013_OMANIMI'
+        SONARQUBE_SERVER = 'SonarQubeServer'
+        SONAR_TOKEN = credentials('SONAR_TOKEN')
+        DOCKERHUB_CREDENTIALS_ID = 'dockerhub-credentials'
+        DOCKERHUB_REPO = 'abdullah22hel/bmi_cal'
         DOCKER_IMAGE_TAG = 'latest'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'master', url: 'YOUR own project github repo'
+                git branch: 'main', url: 'https://github.com/Abdullah22-22/RTL_BMI_Solution_Instructions.git'
             }
         }
 
@@ -36,17 +34,17 @@ pipeline {
                 bat 'mvn test'
             }
         }
-// Check the SonarQube analysis stage for the correct project key and name
+
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv("${env.SONARQUBE_SERVER}") {
                     bat """
                         sonar-scanner ^
-                        -Dsonar.projectKey=BMI_CL ^
+                        -Dsonar.projectKey=BMI_Cal ^
                         -Dsonar.sources=src ^
-                        -Dsonar.projectName=BMI_CL ^
+                        -Dsonar.projectName=BMI_Cal ^
                         -Dsonar.host.url=http://localhost:9000 ^
-                        -Dsonar.login=${env.SONAR_TOKEN} ^
+                        -Dsonar.token=${env.SONAR_TOKEN} ^
                         -Dsonar.java.binaries=target/classes
                     """
                 }
@@ -57,7 +55,7 @@ pipeline {
             steps {
                 script {
                     def app = docker.build("${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}")
-                    env.BUILT_IMAGE = app.id  // Optional: store image ID for reuse
+                    env.BUILT_IMAGE = app.id
                 }
             }
         }
@@ -72,6 +70,4 @@ pipeline {
             }
         }
     }
-
-
 }
