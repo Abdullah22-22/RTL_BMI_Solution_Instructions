@@ -1,52 +1,66 @@
 package org.example.demo1;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class LocalizationService {
 
-    private static final String DB_NAME = "bmi_localization";
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "Test12";
+    private static final Logger LOGGER = Logger.getLogger(LocalizationService.class.getName());
 
-    // Dynamically determine DB host
+    private static final String DB_NAME =
+            System.getenv().getOrDefault("DB_NAME", "bmi_localization");
+
+    private static final String DB_USER =
+            System.getenv().getOrDefault("DB_USER", "root");
+
+    private static final String DB_PASSWORD =
+            System.getenv().getOrDefault("DB_PASSWORD", "Test12");
+
+    private LocalizationService() {
+        // utility class, no instances
+    }
+
     private static String getDatabaseHost() {
-        // Try reading from environment variable (for Docker)
         String host = System.getenv("DB_HOST");
-
-        // Fallback to localhost if not set
         if (host == null || host.isEmpty()) {
             host = "localhost";
         }
-
         return host;
     }
 
-    // Build DB connection URL dynamically
     private static String getDatabaseUrl() {
-        return "jdbc:mysql://" + getDatabaseHost() + ":3306/" + DB_NAME + "?useSSL=false&allowPublicKeyRetrieval=true";
+        return "jdbc:mysql://" + getDatabaseHost() + ":3306/" + DB_NAME
+                + "?useSSL=false&allowPublicKeyRetrieval=true";
     }
 
     public static Map<String, String> getLocalizedStrings(Locale locale) {
         Map<String, String> strings = new HashMap<>();
         String lang = locale.getLanguage();
         String dbUrl = getDatabaseUrl();
+        String query = "SELECT `key`, value FROM localization_strings WHERE language = ?";
 
-        try (Connection conn = DriverManager.getConnection(dbUrl, DB_USER, DB_PASSWORD)) {
-            String query = "SELECT `key`, value FROM localization_strings WHERE language = ?";
-            try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setString(1, lang);
-                ResultSet rs = stmt.executeQuery();
+        try (Connection conn = DriverManager.getConnection(dbUrl, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, lang);
+
+            try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     strings.put(rs.getString("key"), rs.getString("value"));
                 }
             }
-            System.out.println("✅ Loaded localization strings for language: " + lang + " from " + dbUrl);
+            LOGGER.log(Level.INFO, "Loaded localization strings for language: {0}", lang);
+
         } catch (SQLException e) {
-            System.err.println("❌ Database connection failed: " + dbUrl);
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Database connection failed.", e);
         }
 
         return strings;

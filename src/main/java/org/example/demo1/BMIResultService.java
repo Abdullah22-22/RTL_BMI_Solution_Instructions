@@ -4,8 +4,12 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class BMIResultService {
+
+    private static final Logger LOGGER = Logger.getLogger(BMIResultService.class.getName());
 
     // Environment variables with Docker-friendly defaults
     private static final String DB_HOST =
@@ -27,21 +31,21 @@ public class BMIResultService {
             "jdbc:mysql://" + DB_HOST + ":" + DB_PORT + "/" + DB_NAME
                     + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
 
+    private BMIResultService() {
+        // utility class, no instances
+    }
+
     static {
         try {
-            // Ensure MySQL driver loads properly
             Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (ClassNotFoundException e) {
-            System.err.println("❌ MySQL JDBC Driver not found.");
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "MySQL JDBC Driver not found.", e);
         }
     }
 
     public static void saveResult(double weight, double height, double bmi, String language) {
 
         String query = "INSERT INTO bmi_results (weight, height, bmi, language) VALUES (?, ?, ?, ?)";
-
-        System.out.println("🔎 Attempting DB connection to: " + DB_URL);
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -53,13 +57,10 @@ public class BMIResultService {
 
             stmt.executeUpdate();
 
-            System.out.println("✅ BMI result saved successfully.");
+            LOGGER.info("BMI result saved successfully.");
 
         } catch (SQLException e) {
-            System.err.println("❌ Database connection failed.");
-            System.err.println("URL: " + DB_URL);
-            System.err.println("User: " + DB_USER);
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Database connection failed.", e);
         }
     }
 }
