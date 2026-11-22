@@ -13,6 +13,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.version>5.12.1</junit.version>
         <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <!-- JavaFX UI classes need a real display, so they are excluded from coverage only (still analysed for issues) -->
+        <sonar.coverage.exclusions>**/BMIController.java,**/HelloApplication.java</sonar.coverage.exclusions>
     </properties>
 
     <dependencies>
