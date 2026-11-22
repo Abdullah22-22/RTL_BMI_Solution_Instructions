@@ -38,7 +38,7 @@ pipeline {
         stage('SonarQube Analysis') {
              steps {
                   withSonarQubeEnv("${env.SONARQUBE_SERVER}") {
-                  bat 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.1.2184:sonar -Dsonar.projectKey=BMI_Cal -Dsonar.projectName=BMI_Cal'
+                  bat 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar -Dsonar.projectKey=BMI_Cal -Dsonar.projectName=BMI_Cal'
                    }
              }
         }
